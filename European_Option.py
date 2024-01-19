@@ -13,9 +13,9 @@ S_0 = 100 #starting price
 mu = 0.1 #asset drift
 sig = 0.3 #volatility
 dt = 1/365 #time step
-num_paths = 50000 #number of price paths to simulate
+num_paths = 5 #number of price paths to simulate
 
-E = 110 #Call strike
+E = 110 #Option strike
 interest_rate = 0.03 #risk-free interest rate
 time_to_expiry = 1 #years
 
@@ -25,17 +25,17 @@ dW_matrix = np.random.normal(0,math.sqrt(dt),size=(num_paths,365))
 #Compute price paths using vectorisation
 price_paths = S_0 * np.exp(np.cumsum(mu*dt+sig*dW_matrix,axis=1))
 
-# fig,ax = plt.subplots()
-# i = 1
-# for p in price_paths:
-#     plt.plot(p, label= f'Path {i}')
-#     i = i+1
+fig,ax = plt.subplots()
+i = 1
+for p in price_paths:
+    plt.plot(p, label= f'Path {i}')
+    i = i+1
     
-# plt.title('Geometric Brownian Motion of Asset Price Paths')
-# plt.xlabel('Time (days)')
-# plt.ylabel('Price ($)')
-# plt.legend()
-# plt.show()
+plt.title('Geometric Brownian Motion of Asset Price Paths')
+plt.xlabel('Time (days)')
+plt.ylabel('Price ($)')
+plt.legend()
+plt.show()
 
 def European_Call_Payoff(S,E):
     return max(S-E,0)
