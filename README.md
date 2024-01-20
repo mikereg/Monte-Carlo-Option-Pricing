@@ -16,7 +16,7 @@ This project prices European options using the Monte Carlo method.  This simulat
 
 Monte Carlo Simulation is a powerful numerical technique used in quantitative finance to model the randomness of financial instruments. This project focuses on the pricing of European calls and puts by running repeated simulations of the price of the underlying asset.
 
-In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t} \hspace*{4} (1)$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
+In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t} \hspace*{4cm} (1)$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
 
 ## Methodology
 
