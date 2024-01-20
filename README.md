@@ -16,7 +16,7 @@ This project prices European options using the Monte Carlo method.  This simulat
 
 Monte Carlo Simulation is a powerful numerical technique used in quantitative finance to model the randomness of financial instruments. This project focuses on the pricing of European calls and puts by running repeated simulations of the price of the underlying asset.
 
-In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t} \hspace*{4cm} (1)$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
+In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t} \hspace*{#1} (1)$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
 
 ## Methodology
 
@@ -36,7 +36,7 @@ The program will print the  Monte Carlo estimate of the price of a European call
 ### Implementation Overview
 
 1.  **Asset prices**: Asset price dynamics are modelled using $(1)$ with discretised time steps. In order to allow for scalability, the random asset paths were vectorised in the following fashion:
-	* A matrix of random increments $\mathrm{d}\mathbf{W}$ was defined, where each element $(dW)_{ij}$ represents  the random increment  of the $j$th time-step of the $i$th simulation.
+	* A matrix of random increments $\mathrm{d}\mathbf{W}$ was defined, where each element $(dW)_{ij}$ represents  the random increment  of the $j$ th time-step of the $i$ th simulation.
 	* The matrix of simulated price paths is then computed using a vectorised version of the formula $S_t = S_{0}e^{\mu dt+\sigma dW_t}$.
 
 2. **Option pay-offs**:  For each price path, the payoff of the call and put at expiry (final simulated price) is calculated.
