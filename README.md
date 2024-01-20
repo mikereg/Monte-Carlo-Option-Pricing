@@ -16,7 +16,7 @@ This project prices European options using the Monte Carlo method.  This simulat
 
 Monte Carlo Simulation is a powerful numerical technique used in quantitative finance to model the randomness of financial instruments. This project focuses on the pricing of European calls and puts by running repeated simulations of the price of the underlying asset.
 
-In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\begin{equation}{\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t}}\end{equation}$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
+In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t} \;\;\;\; (1)$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
 
 ## Methodology
 
@@ -52,12 +52,12 @@ An example of some simulated asset price paths with $S_0 = 100$, $\mu = 0.1$ and
 
 1. Clone the repository:
 	```bash
-	git clone https://github.com/mikereg/
+	git clone https://github.com/mikereg/Monte-Carlo-Option-Pricing
 	```
 2.  Navigate to the project directory:
 
 	```bash
-	cd self-organised-criticality
+	cd monte-carlo-option-pricing
 	```
 3. Open and modify the `monte_carlo_option_pricing.py` file to adjust parameters such as the initial stock price, drift, volatility, time step, number of simulations, interest rate, and time to expiration.
     
