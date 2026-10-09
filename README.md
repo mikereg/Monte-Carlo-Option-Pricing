@@ -1,76 +1,99 @@
-
-
 # Option Pricing using a Monte Carlo Simulation
 
-This project prices European options using the Monte Carlo method.  This simulation uses geometric Brownian motion to simulate asset prices. Additions are in the pipeline to allow for the pricing of more complex options.
+This project prices European options using the Monte Carlo method and compares the result with the analytical Black-Scholes price. The simulation uses geometric Brownian motion to model asset prices. Additions are in the pipeline to allow for the pricing of more complex options.
 
 ## Table of Contents
-* [Introduction](#introduction) 
-* [Methodology](#methodology) 
-* [Installation](#installation) 
+* [Introduction](#introduction)
+* [Methodology](#methodology)
+* [Installation](#installation)
 * [Dependencies](#dependencies)
-* [Contributing](#contributing) 
-* [License](#license) 
+* [Contributing](#contributing)
+* [License](#license)
 
 ## Introduction
 
 Monte Carlo Simulation is a powerful numerical technique used in quantitative finance to model the randomness of financial instruments. This project focuses on the pricing of European calls and puts by running repeated simulations of the price of the underlying asset.
 
-In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed  by the *stochastic differential equation*: $$\frac{dS_{t}}{S_{t}} = \mu dt + \sigma dW_{t}$$ where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the Brownian motion, $\sigma$ is its volatility and $dW_{t}$ follows a normal distribution with mean $0$ and standard deviation $\sqrt{dt}$. 
+In order to model the behaviour of the underlying, we assume that the asset follows a [Geometric Brownian Motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion), governed by the *stochastic differential equation*:
+
+$$\frac{dS_{t}}{S_{t}} = \mu\, dt + \sigma\, dW_{t}$$
+
+where $S_t$ is the price of the underlying asset at time $t$, $\mu$ is the drift of the asset, $\sigma$ is its volatility and $dW_{t}$ is a Brownian increment, normally distributed with mean $0$ and standard deviation $\sqrt{dt}$.
+
+By Itô's lemma, the solution over a time step $dt$ is
+
+$$S_{t+dt} = S_t \exp\left(\left(\mu - \tfrac{1}{2}\sigma^2\right)dt + \sigma\, dW_t\right)$$
+
+where the $-\tfrac{1}{2}\sigma^2$ term is the Itô correction.
+
+**Risk-neutral pricing:** to price an option, the asset is simulated under the risk-neutral measure, where the drift $\mu$ is replaced by the risk-free rate $r$. The real-world drift $\mu$ does not affect the option price; it is only used for the asset path illustration below.
 
 ## Methodology
 
 ### Parameters
-* **S_0**: Initial asset price
-* **mu**: Asset drift (average rate  of return)
-* **sig**: Volatility
-* **dt**: time-step size 
-* **num_paths**: Number of simulations to run
-* **E**: Option strike price
-* **interest_rate**: Risk-free interest rate
-* **time_to_expiry**: Time to option expiration
+These are set at the top of `European_Option.py`:
+* **S0**: Initial asset price
+* **K**: Option strike price
+* **r**: Risk-free interest rate
+* **sigma**: Volatility
+* **T**: Time to expiry (years)
+* **n_paths**: Number of simulated paths
+* **seed**: Random seed, for reproducible results
 
 ### Output
-The program will print the  Monte Carlo estimate of the price of a European call and put based on the above parameters.
+The script prints a table comparing, for both the call and the put:
+* **MC**: the Monte Carlo price estimate
+* **SE**: the standard error of that estimate
+* **Black-Scholes**: the analytical Black-Scholes price
+* **Error**: MC minus Black-Scholes
+* **Error/SE**: the error measured in standard errors (values within about ±2 are consistent with sampling noise)
 
 ### Implementation Overview
 
-1.  **Asset prices**: Asset price dynamics are modelled using the stochastic differential equation defined above with discretised time steps. In order to allow for scalability, the random asset paths were vectorised in the following fashion:
-	* A matrix of random increments $\mathrm{d}\mathbf{W}$ was defined, where each element $(dW)_{ij}$ represents  the random increment  of the $j$ th time-step of the $i$ th simulation.
-	* The matrix of simulated price paths is then computed using a vectorised version of the formula $S_t = S_{0}e^{\mu dt+\sigma dW_t}$.
+1. **Terminal asset prices**: A European payoff depends only on the asset price at expiry, so the terminal price is sampled exactly in a single step, with no time-stepping needed:
+   $$S_T = S_0 \exp\left(\left(r - \tfrac{1}{2}\sigma^2\right)T + \sigma\sqrt{T}\,Z\right), \qquad Z \sim N(0, 1)$$
+   All paths are drawn at once as a vectorised NumPy array.
+2. **Option payoffs**: The call payoff $\max(S_T - K, 0)$ and put payoff $\max(K - S_T, 0)$ are computed for every path with `np.maximum`.
+3. **Discount future payoffs**: Each simulated payoff is discounted to present value with the factor $e^{-rT}$.
+4. **Calculate the options' value**: The mean of the discounted payoffs is the Monte Carlo estimate of the option's value, and its standard error is $s/\sqrt{n}$, where $s$ is the sample standard deviation of the discounted payoffs and $n$ the number of paths.
+5. **Compare with Black-Scholes**: The estimate is compared with the analytical Black-Scholes price.
 
-2. **Option pay-offs**:  For each price path, the payoff of the call and put at expiry (final simulated price) is calculated.
-3. **Discount future pay-offs**: Each of the simulated future payoffs is discounted to the present value using the risk-free interest rate.
-4. **Calculate options' value**:  The average of the discounted payoffs is calculated. The result is the Monte Carlo estimate of the options' value.
+Full price paths, which are only needed for plotting, are generated by `simulate_paths` using the time-step formula above.
 
-### Simulated Asset Paths Illustration:
-An example of some simulated asset price paths with $S_0 = 100$, $\mu = 0.1$ and $\sigma  = 0.3$ (for clarity the number of paths in this illustration was limited to 5; in practice that number is of the order of $10^{5}$):
+### Simulated Asset Paths Illustration
+An illustrative example of simulated asset price paths with $S_0 = 100$, $\mu = 0.1$ and $\sigma = 0.3$. For clarity, the number of paths in this illustration is limited to 5; in practice that number is of the order of $10^{5}$.
 
 ![asset prices](images/asset_prices.png)
 
 ## Installation
 
 1. Clone the repository:
-	```bash
-	git clone https://github.com/mikereg/Monte-Carlo-Option-Pricing
-	```
-2.  Navigate to the project directory:
-
-	```bash
-	cd monte-carlo-option-pricing
-	```
-3. Open and modify the `monte_carlo_option_pricing.py` file to adjust parameters such as the initial stock price, drift, volatility, time step, number of simulations, interest rate, and time to expiration.
-    
-4.  Run the simulation:
-
-```bash
-python European_Options.py
-```
-
-5.  View the generated asset price paths and the Monte Carlo estimate of the option price.
+   ```bash
+   git clone https://github.com/mikereg/Monte-Carlo-Option-Pricing
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd Monte-Carlo-Option-Pricing
+   ```
+3. Create and activate a virtual environment, then install the dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+4. Optionally, edit the parameters at the top of `European_Option.py`.
+5. Run the simulation:
+   ```bash
+   python European_Option.py
+   ```
 
 ## Dependencies
+All dependencies are listed in `requirements.txt`:
 * NumPy
+* SciPy
+* Matplotlib
+* pandas
+* Jupyter
 
 ## Contributing
 
@@ -78,4 +101,3 @@ Feel free to contribute to the project by opening issues or submitting pull requ
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
-
