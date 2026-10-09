@@ -1,45 +1,72 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Monte Carlo pricing of European options.
+
+The underlying follows geometric Brownian motion. For pricing, paths are
+simulated under the risk-neutral measure (drift = risk-free rate r):
+
+    S_T = S0 * exp((r - sigma^2 / 2) * T + sigma * sqrt(T) * Z),  Z ~ N(0, 1)
+
 Created on Fri Jan 19 14:14:46 2024
 
 @author: michaelreginiano
 """
 import numpy as np
-import math
 
-S_0 = 100 #starting price
-sig = 0.3 #volatility
-dt = 1/365 #time step
-num_paths = 50000 #number of price paths to simulate
+S0 = 100          # initial asset price
+K = 110           # option strike
+r = 0.03          # risk-free interest rate
+sigma = 0.3       # volatility
+T = 1             # time to expiry (years)
+n_paths = 100_000 # number of simulated paths
+seed = 42         # random seed for reproducibility
 
-E = 110 #Option strike
-interest_rate = 0.03 #risk-free interest rate
-time_to_expiry = 1 #years
 
-n_steps = int(round(time_to_expiry/dt)) #number of time steps to expiry
+def simulate_terminal_prices(S0, r, sigma, T, n_paths, rng):
+    """Sample risk-neutral terminal prices S_T exactly, in a single step."""
+    Z = rng.standard_normal(n_paths)
+    return S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
 
-#A matrix of random increments for all price paths
-dW_matrix = np.random.normal(0,math.sqrt(dt),size=(num_paths,n_steps))
 
-#Compute risk-neutral price paths using vectorisation.
-#Pricing uses the risk-free rate as drift, and the -sig^2/2 term
-#is the Ito correction for the log of a GBM.
-price_paths = S_0 * np.exp(np.cumsum((interest_rate-0.5*sig**2)*dt+sig*dW_matrix,axis=1))
+def simulate_paths(S0, mu, sigma, T, n_steps, n_paths, rng):
+    """Simulate full GBM paths with drift mu, returning shape (n_paths, n_steps + 1).
 
-def European_Call_Payoff(S,E):
-    return max(S-E,0)
+    Only needed for plotting: European payoffs depend on S_T alone.
+    """
+    dt = T / n_steps
+    dW = rng.normal(0, np.sqrt(dt), size=(n_paths, n_steps))
+    log_increments = (mu - 0.5 * sigma**2) * dt + sigma * dW
+    log_paths = np.cumsum(log_increments, axis=1)
+    log_paths = np.hstack([np.zeros((n_paths, 1)), log_paths])
+    return S0 * np.exp(log_paths)
 
-def European_Put_Payoff(S,E):
-    return max(E-S,0)
 
-call_pay_offs = np.array([European_Call_Payoff(p[-1], E) for p in price_paths])
-discounted_call_pay_offs = call_pay_offs * np.exp(-interest_rate*time_to_expiry)
-call_estimate = np.mean(discounted_call_pay_offs)
+def payoff(S, K, option="call"):
+    """European payoff at expiry."""
+    if option == "call":
+        return np.maximum(S - K, 0)
+    if option == "put":
+        return np.maximum(K - S, 0)
+    raise ValueError(f"option must be 'call' or 'put', got {option!r}")
 
-put_pay_offs = np.array([European_Put_Payoff(p[-1], E) for p in price_paths])
-discounted_put_pay_offs = put_pay_offs * np.exp(-interest_rate*time_to_expiry)
-put_estimate = np.mean(discounted_put_pay_offs)
 
-print('Call Estimate: {}'.format(call_estimate))
-print('Put Estimate: {}'.format(put_estimate))
+def mc_price(S0, K, r, sigma, T, n_paths, option="call", rng=None):
+    """Monte Carlo price of a European option.
+
+    Returns (price, std_err), where std_err is the standard error of the
+    mean discounted payoff.
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+    S_T = simulate_terminal_prices(S0, r, sigma, T, n_paths, rng)
+    discounted = np.exp(-r * T) * payoff(S_T, K, option)
+    return discounted.mean(), discounted.std(ddof=1) / np.sqrt(n_paths)
+
+
+if __name__ == "__main__":
+    rng = np.random.default_rng(seed)
+    print(f"S0={S0}, K={K}, r={r}, sigma={sigma}, T={T}, n_paths={n_paths:,}\n")
+    for option in ("call", "put"):
+        mc, se = mc_price(S0, K, r, sigma, T, n_paths, option, rng)
+        print(f"{option.capitalize()} estimate: {mc:.4f} (SE {se:.4f})")
