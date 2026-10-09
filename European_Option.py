@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Monte Carlo pricing of European options.
+Monte Carlo pricing of European options, with the analytical Black-Scholes
+price for comparison.
 
 The underlying follows geometric Brownian motion. For pricing, paths are
 simulated under the risk-neutral measure (drift = risk-free rate r):
@@ -13,6 +14,7 @@ Created on Fri Jan 19 14:14:46 2024
 @author: michaelreginiano
 """
 import numpy as np
+from scipy.stats import norm
 
 S0 = 100          # initial asset price
 K = 110           # option strike
@@ -64,9 +66,22 @@ def mc_price(S0, K, r, sigma, T, n_paths, option="call", rng=None):
     return discounted.mean(), discounted.std(ddof=1) / np.sqrt(n_paths)
 
 
+def black_scholes_price(S0, K, r, sigma, T, option="call"):
+    """Analytical Black-Scholes price of a European option."""
+    d1 = (np.log(S0 / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    if option == "call":
+        return S0 * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    if option == "put":
+        return K * np.exp(-r * T) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
+    raise ValueError(f"option must be 'call' or 'put', got {option!r}")
+
+
 if __name__ == "__main__":
     rng = np.random.default_rng(seed)
     print(f"S0={S0}, K={K}, r={r}, sigma={sigma}, T={T}, n_paths={n_paths:,}\n")
+    print(f"{'':<6}{'MC':>10}{'SE':>9}{'Black-Scholes':>15}{'Error':>9}{'Error/SE':>10}")
     for option in ("call", "put"):
         mc, se = mc_price(S0, K, r, sigma, T, n_paths, option, rng)
-        print(f"{option.capitalize()} estimate: {mc:.4f} (SE {se:.4f})")
+        bs = black_scholes_price(S0, K, r, sigma, T, option)
+        print(f"{option.capitalize():<6}{mc:>10.4f}{se:>9.4f}{bs:>15.4f}{mc - bs:>9.4f}{(mc - bs) / se:>10.2f}")
