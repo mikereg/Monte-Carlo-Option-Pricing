@@ -95,9 +95,5 @@ All dependencies are listed in `requirements.txt`:
 * pandas
 * Jupyter
 
-## Contributing
-
-Feel free to contribute to the project by opening issues or submitting pull requests.
-
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
